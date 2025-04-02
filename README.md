@@ -1,79 +1,147 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# ReachuDemo - eCommerce Mobile Application
 
-# Getting Started
+This project is a demonstration of a mobile eCommerce application built with React Native that integrates with the Reachu GraphQL API.
 
->**Note**: Make sure you have completed the [React Native - Environment Setup](https://reactnative.dev/docs/environment-setup) instructions till "Creating a new application" step, before proceeding.
+## Features
 
-## Step 1: Start the Metro Server
+- **Product Catalog**: Browse products with images, prices, and descriptions
+- **Shopping Cart**: Full functionality to add, remove, and update products
+- **Multi-step Checkout Process**:
+  - Cart summary
+  - Shipping address form
+  - Billing address form
+  - Order review
+- **Payment Integration**: Multiple payment gateway support (Stripe, Klarna)
+- **Modern Design**: Clean and attractive user interface with quality UX
 
-First, you will need to start **Metro**, the JavaScript _bundler_ that ships _with_ React Native.
+## Technologies
 
-To start Metro, run the following command from the _root_ of your React Native project:
+- [React Native](https://reactnative.dev/) - Mobile development framework
+- [Apollo Client](https://www.apollographql.com/docs/react/) - GraphQL client for React
+- [React Navigation](https://reactnavigation.org/) - Screen navigation
+- [React Native Elements](https://reactnativeelements.com/) - UI components
+- [React Native Paper](https://callstack.github.io/react-native-paper/) - Additional UI components
+
+## Project Structure
+
+```
+/components
+  /FooterNavigation     # Bottom navigation bar
+  /ProductDetail        # Detailed product view
+  /Screens
+    /Checkout           # Multi-step checkout process
+      /components       # Components for each checkout step
+    /Container          # Main container
+    /Payment            # Payment screen and gateways
+    /Products           # Product listing and grid
+/context
+  cartContext.js        # Global cart context
+/graphql
+  /hooks                # Custom GraphQL hooks
+  /mutations            # GraphQL mutation definitions
+  /queries              # GraphQL query definitions
+  /schema_reachu.json   # GraphQL schema
+```
+
+## Reachu API
+
+Reachu is a platform that provides a comprehensive GraphQL API for eCommerce:
+
+- Product and variant management
+- Shopping cart
+- Checkout process
+- Multiple payment gateway integration (Stripe, Klarna, Vipps)
+- Multi-currency and multi-country support
+
+## Checkout Flow
+
+The implemented checkout process has the following steps:
+
+1. **Cart Summary**: Shows selected products
+2. **Shipping Information**: Collects address and contact details
+3. **Billing Information**: Option to use the same shipping address or provide a different one
+4. **Order Review**: Final confirmation of address, items, and terms
+5. **Payment**: Payment method selection (Stripe or Klarna)
+
+## Quick Start Guide
+
+### Prerequisites
+
+- Node.js (>= 14.x)
+- Watchman
+- Ruby (for iOS)
+- Xcode (for iOS)
+- Android Studio (for Android)
+- JDK (>= 11)
+
+Refer to the [official setup guide](https://reactnative.dev/docs/environment-setup) for detailed instructions.
+
+### Installation
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/reachuDemo.git
+   cd reachuDemo
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   # For iOS also run:
+   cd ios && pod install && cd ..
+   ```
+
+3. Configure environment variables (create a .env file based on .env.example)
+
+### Running the App
+
+To start the Metro server and run the application:
 
 ```bash
-# using npm
+# Start Metro
 npm start
 
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Start your Application
-
-Let Metro Bundler run in its _own_ terminal. Open a _new_ terminal from the _root_ of your React Native project. Run the following command to start your _Android_ or _iOS_ app:
-
-### For Android
-
-```bash
-# using npm
-npm run android
-
-# OR using Yarn
-yarn android
-```
-
-### For iOS
-
-```bash
-# using npm
+# In another terminal, for iOS:
 npm run ios
 
-# OR using Yarn
-yarn ios
+# Or for Android:
+npm run android
 ```
 
-If everything is set up _correctly_, you should see your new app running in your _Android Emulator_ or _iOS Simulator_ shortly provided you have set up your emulator/simulator correctly.
+## Troubleshooting
 
-This is one way to run your app — you can also run it directly from within Android Studio and Xcode respectively.
+If you encounter the error `listen EADDRINUSE: address already in use :::8081`, it means Metro is already running. You can:
 
-## Step 3: Modifying your App
+```bash
+# Find the process
+lsof -i :8081 | grep node
 
-Now that you have successfully run the app, let's modify it.
+# Kill it with its PID (replace 12345 with the actual PID)
+kill -9 12345
+```
 
-1. Open `App.tsx` in your text editor of choice and edit some lines.
-2. For **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Developer Menu** (<kbd>Ctrl</kbd> + <kbd>M</kbd> (on Window and Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (on macOS)) to see your changes!
+To restart completely:
 
-   For **iOS**: Hit <kbd>Cmd ⌘</kbd> + <kbd>R</kbd> in your iOS Simulator to reload the app and see your changes!
+```bash
+npm start -- --reset-cache
+```
 
-## Congratulations! :tada:
+## Customization
 
-You've successfully run and modified your React Native App. :partying_face:
+The project is designed to be easily customizable:
 
-### Now what?
+- To change colors and theme, edit the style files
+- To adjust checkout features, modify components in `/Screens/Checkout`
+- To add payment methods, implement new components in `/Screens/Payment/components`
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [Introduction to React Native](https://reactnative.dev/docs/getting-started).
+## GraphQL Error Handling
 
-# Troubleshooting
+The application includes comprehensive logging for GraphQL operations that will help debug API integration issues:
 
-If you can't get this to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+- Detailed request and response logging
+- Structured error handling
+- Parameter validation
 
-# Learn More
+## License
 
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+This project is licensed under the MIT License.
