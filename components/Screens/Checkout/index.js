@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,439 +6,260 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  FlatList,
+  Image,
+  TouchableOpacity,
 } from 'react-native';
-import {Button} from '@rneui/themed';
+import { Button } from '@rneui/themed';
 import CheckBox from '@react-native-community/checkbox';
-import {actions, useCart} from '../../../context/cartContext';
-import {useUpdateCart} from '../../../graphql/hooks/cart';
+import { actions, useCart } from '../../../context/cartContext';
+import { useUpdateCart } from '../../../graphql/hooks/cart';
 import {
   useCreateCheckout,
   useUpdateCheckout,
 } from '../../../graphql/hooks/checkout';
-import {useUpdateItemToCart} from '../../../graphql/hooks/cartItem';
+import { useUpdateItemToCart } from '../../../graphql/hooks/cartItem';
+import { CartSummary } from './components/CartSummary';
+import { ShippingAddressForm } from './components/ShippingAddressForm';
+import { BillingAddressForm } from './components/BillingAddressForm';
+import { CheckoutReview } from './components/CheckoutReview';
+import { StepIndicator } from './components/StepIndicator';
+
+const CartItem = ({ item, onRemove }) => {
+  return (
+    <View style={styles.cartItem}>
+      {item.image && (
+        <Image source={{ uri: item.image }} style={styles.cartItemImage} />
+      )}
+      <View style={styles.cartItemDetails}>
+        <Text style={styles.cartItemTitle} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <Text style={styles.cartItemPrice}>
+          {item.price ? `${item.price.amount} ${item.price.currency}` : 'N/A'}
+        </Text>
+        <Text style={styles.cartItemQuantity}>Quantity: {item.quantity}</Text>
+      </View>
+      <TouchableOpacity onPress={onRemove} style={styles.removeButton}>
+        <Text style={styles.removeButtonText}>×</Text>
+      </TouchableOpacity>
+    </View>
+  );
+};
 
 export const CheckoutScreen = () => {
   const {
-    state: {selectedCountry, checkout, cartId, cartItems, selectedCurrency},
-    dispatch,
+    state: { cartItems },
   } = useCart();
 
-  const [email, setEmail] = useState(checkout?.email ?? '');
-  const [firstName, setFirstName] = useState(
-    checkout?.billingAddress?.first_name ?? '',
-  );
-  const [lastName, setLastName] = useState(
-    checkout?.billingAddress?.last_name ?? '',
-  );
-  const [phone, setPhone] = useState(
-    (checkout?.billingAddress?.phone ?? '') + '',
-  );
-  const [phoneCode] = useState(checkout?.billingAddress?.phoneCode ?? '+47');
-  const [address1, setAddress1] = useState(
-    checkout?.billingAddress?.address1 ?? '',
-  );
-  const [address2, setAddress2] = useState(
-    checkout?.billingAddress?.address2 ?? '',
-  );
-  const [city, setCity] = useState(checkout?.billingAddress?.city ?? '');
-  const [country, setCountry] = useState('Norway');
-  const [countryCode] = useState(selectedCountry);
-  const [zipCode, setZipCode] = useState(
-    (checkout?.billingAddress?.zip ?? '') + '',
-  );
-  const [company, setCompany] = useState(
-    checkout?.billingAddress?.company ?? '',
-  );
-  const [acceptsTermsConditions] = useState(true);
-  const [acceptsPurchaseConditions] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [shippingAddress, setShippingAddress] = useState(null);
+  const [billingAddress, setBillingAddress] = useState(null);
   const [sameAsBillingAddress, setSameAsBillingAddress] = useState(true);
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState('');
 
-  const {executeUpdateCart} = useUpdateCart();
+  // Steps for the checkout process
+  const steps = [
+    { title: 'Cart', completed: true },
+    { title: 'Shipping', completed: currentStep > 0 },
+    { title: 'Billing', completed: currentStep > 1 },
+    { title: 'Review', completed: currentStep > 2 },
+    { title: 'Payment', completed: false }
+  ];
 
-  const {createCheckout} = useCreateCheckout();
-
-  const {updateCheckout} = useUpdateCheckout();
-
-  const {updateItemToCart} = useUpdateItemToCart();
-
-  const validateForm = () => {
-    let isValid = true;
-    let newErrors = {};
-
-    if (!email) {
-      newErrors.email = 'E-mail is required';
-      isValid = false;
-    }
-    if (!firstName) {
-      newErrors.firstName = 'Name is required';
-      isValid = false;
-    }
-    if (!lastName) {
-      newErrors.lastName = 'Last name is required';
-      isValid = false;
-    }
-
-    if (!phoneCode) {
-      newErrors.phoneCode = 'Phone code is required';
-      isValid = false;
-    }
-
-    if (!phone) {
-      newErrors.phone = 'Phone is required';
-      isValid = false;
-    }
-
-    if (!address1) {
-      newErrors.address1 = 'Address Line 1 is required';
-      isValid = false;
-    }
-
-    if (!country) {
-      newErrors.country = 'Country is required';
-      isValid = false;
-    }
-
-    if (!countryCode) {
-      newErrors.countryCode = 'Country code is required';
-      isValid = false;
-    }
-
-    if (!city) {
-      newErrors.city = 'City is required';
-      isValid = false;
-    }
-
-    if (!zipCode) {
-      newErrors.zipCode = 'Zip/Postal Code is required';
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
+  const handleNext = () => {
+    setCurrentStep(currentStep + 1);
   };
 
-  const formatAddressForMutation = address => {
-    return {
-      address1: address.address1,
-      address2: address.address2,
-      city: address.city,
-      company: address.company,
-      country: country,
-      country_code: address.countryCode.toUpperCase(),
-      email: email,
-      first_name: address.first_name,
-      last_name: address.last_name,
-      phone: address.phone,
-      phone_code: address.phoneCode,
-      province: address.province,
-      province_code: address.provinceCode,
-      zip: address.zip,
-    };
+  const handleBack = () => {
+    setCurrentStep(currentStep - 1);
   };
 
-  const findShippingCountryId = (
-    _countryCode,
-    _currencyCode,
-    productShipping,
-  ) => {
-    if (!productShipping) {
-      return null;
+  const handleShippingSubmit = (data) => {
+    setShippingAddress(data);
+    setEmail(data.email);
+
+    if (sameAsBillingAddress) {
+      setBillingAddress(data);
+      setCurrentStep(3); // Skip billing step and go directly to review
+    } else {
+      setCurrentStep(2); // Go to billing step
     }
-
-    for (let shippingInfo of productShipping) {
-      let shippingCountries = shippingInfo.shipping_country;
-      if (shippingCountries) {
-        for (const _country of shippingCountries) {
-          const countryInfo = _country;
-
-          if (
-            countryInfo.country.toUpperCase() === _countryCode.toUpperCase() &&
-            countryInfo.currency_code.toUpperCase() ===
-              _currencyCode.toUpperCase()
-          ) {
-            return countryInfo.id;
-          }
-        }
-      }
-    }
-
-    return null;
   };
 
-  const submitForm = async () => {
-    try {
-      setIsLoading(true);
-      if (validateForm()) {
-        const address = formatAddressForMutation({
-          address1: address1,
-          address2: address2,
-          city: city,
-          company: company,
-          country: country,
-          countryCode: countryCode,
-          email: email,
-          first_name: firstName,
-          last_name: lastName,
-          phone: phone,
-          phoneCode: phoneCode,
-          province: city,
-          provinceCode: '',
-          zip: zipCode,
-        });
-        const billingAddress = address;
-        const shippingAddress = address;
+  const handleBillingSubmit = (data) => {
+    setBillingAddress(data);
+    setCurrentStep(3); // Go to review step (previous was 2)
+  };
 
-        // Update the cart mutation with the country of shipment.
-        await executeUpdateCart(cartId, selectedCountry);
-
-        // Iterate over the items in the cart and update them if necessary.
-        for (const cartItem of cartItems) {
-          const countryId = await findShippingCountryId(
-            countryCode,
-            selectedCurrency,
-            cartItem.productShipping,
-          );
-          if (countryId != null) {
-            await updateItemToCart(
-              cartId,
-              cartItem.cartItemId,
-              null,
-              countryId,
-            );
-          } else {
-            console.error(
-              `Country id could not be found for the cart item with id: ${cartItem.cartItemId}`,
-            );
-          }
-        }
-
-        const newCheckout = await createCheckout(cartId);
-
-        await updateCheckout(
-          newCheckout.id,
-          email,
-          billingAddress,
-          shippingAddress,
-          acceptsTermsConditions,
-          acceptsPurchaseConditions,
+  // Render the current step
+  const renderStep = () => {
+    switch (currentStep) {
+      case 0:
+        return <CartSummary onNext={handleNext} />;
+      case 1:
+        return (
+          <ShippingAddressForm
+            onBack={handleBack}
+            onSubmit={handleShippingSubmit}
+            initialValues={shippingAddress}
+            email={email}
+            setEmail={setEmail}
+            sameAsBillingAddress={sameAsBillingAddress}
+            setSameAsBillingAddress={setSameAsBillingAddress}
+          />
         );
-
-        dispatch({
-          type: actions.SET_CHECKOUT_STATE,
-          payload: {
-            id: newCheckout?.id,
-            email: email,
-            billingAddress: billingAddress,
-            shippingAddress: shippingAddress,
-          },
-        });
-
-        dispatch({
-          type: actions.SET_SELECTED_SCREEN,
-          payload: 'Payment',
-        });
-
-        console.log('form send successfully');
-      } else {
-        console.log('Form send errors');
-      }
-    } catch (error) {
-      console.error('Error submitting form', error);
-    } finally {
-      setIsLoading(false);
+      case 2:
+        return (
+          <BillingAddressForm
+            onBack={handleBack}
+            onSubmit={handleBillingSubmit}
+            initialValues={billingAddress}
+          />
+        );
+      case 3:
+        return (
+          <CheckoutReview
+            onBack={handleBack}
+            onSubmit={handleNext}
+            shippingAddress={shippingAddress}
+            billingAddress={billingAddress}
+            email={email}
+          />
+        );
+      default:
+        return <CartSummary onNext={handleNext} />;
     }
   };
 
   return (
-    <>
-      <ScrollView style={styles.container}>
-        <Text style={styles.sectionTitle}>Contact Information</Text>
-        {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setEmail}
-          value={email}
-          placeholder="Email"
-        />
-        <Text style={styles.sectionTitle}>Billing Address</Text>
-        {errors.firstName && (
-          <Text style={styles.errorText}>{errors.firstName}</Text>
-        )}
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setFirstName}
-          value={firstName}
-          placeholder="First Name"
-        />
-        {errors.lastName && (
-          <Text style={styles.errorText}>{errors.lastName}</Text>
-        )}
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setLastName}
-          value={lastName}
-          placeholder="Last Name"
-        />
-        {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setPhone}
-          value={phone}
-          placeholder="Phone"
-        />
-        {errors.address1 && (
-          <Text style={styles.errorText}>{errors.address1}</Text>
-        )}
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setAddress1}
-          value={address1}
-          placeholder="Address Line 1"
-        />
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setAddress2}
-          value={address2}
-          placeholder="Address Line 2 (Optional)"
-        />
-        {errors.country && (
-          <Text style={styles.errorText}>{errors.country}</Text>
-        )}
-        <TextInput
-          autoCapitalize="none"
-          style={[styles.input, styles.inputDisabled]}
-          onChangeText={setCountry}
-          value={country}
-          placeholder="Country"
-          editable={false}
-        />
-        {errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setCity}
-          value={city}
-          placeholder="City"
-        />
-        {errors.zipCode && (
-          <Text style={styles.errorText}>{errors.zipCode}</Text>
-        )}
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setZipCode}
-          value={zipCode}
-          placeholder="ZIP/Postal Code"
-        />
-        <TextInput
-          autoCapitalize="none"
-          style={styles.input}
-          onChangeText={setCompany}
-          value={company}
-          placeholder="Company (Optional)"
-        />
-        <View style={styles.checkboxContainer}>
-          <CheckBox
-            value={sameAsBillingAddress}
-            onValueChange={setSameAsBillingAddress}
-            disabled={true}
-          />
-          <Text style={styles.checkboxLabel}>
-            Shipping address is the same as billing address
-          </Text>
-        </View>
-        <Text style={styles.summaryText}>
-          By proceeding with this checkout, you automatically agree to our Terms
-          and Conditions and Purchase Conditions. These conditions are designed
-          to ensure a smooth transaction and clarify the responsibilities and
-          rights of all parties involved.
-        </Text>
-        <View style={styles.checkboxContainer}>
-          <CheckBox disabled value={acceptsTermsConditions} />
-          <Text style={styles.checkboxLabel}>Accept Terms and Conditions</Text>
-        </View>
-        <View style={styles.checkboxContainer}>
-          <CheckBox disabled value={acceptsPurchaseConditions} />
-          <Text style={styles.checkboxLabel}>Accept Purchase Conditions</Text>
-        </View>
-        <Button
-          title="Submit Order"
-          onPress={submitForm}
-          buttonStyle={styles.submitButton}
-          titleStyle={styles.submitButtonText}
-        />
-      </ScrollView>
-      {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </View>
-      )}
-    </>
+    <View style={styles.container}>
+      <StepIndicator currentStep={currentStep} steps={steps} />
+      {renderStep()}
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
-    paddingTop: 0,
+    padding: 16,
+    backgroundColor: '#FFFFFF',
   },
-  input: {
-    height: 40,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 24,
+    textAlign: 'center',
+    color: '#000000',
+  },
+  emptyCart: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 50,
+  },
+  emptyCartText: {
+    fontSize: 18,
+    color: '#666666',
+    marginBottom: 20,
+  },
+  continueShoppingButton: {
+    padding: 12,
+    backgroundColor: '#000000',
+    borderRadius: 8,
+  },
+  continueShoppingButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  cartList: {
+    paddingBottom: 20,
+  },
+  cartItem: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    padding: 12,
     marginBottom: 12,
-    borderWidth: 1,
-    paddingHorizontal: 10,
+    borderRadius: 8,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  cartItemImage: {
+    width: 70,
+    height: 70,
+    resizeMode: 'cover',
     borderRadius: 4,
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  checkboxContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  checkboxLabel: {
-    marginLeft: 8,
-  },
-  submitButton: {
-    backgroundColor: '#007bff',
-    borderRadius: 5,
-    padding: 12,
-    marginTop: 20,
-  },
-  submitButtonText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  inputDisabled: {
-    backgroundColor: '#f0f0f0',
-    fontWeight: 'bold',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 14,
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    alignItems: 'center',
+  cartItemDetails: {
+    flex: 1,
+    marginLeft: 12,
     justifyContent: 'center',
   },
-  summaryText: {
+  cartItemTitle: {
     fontSize: 16,
-    color: '#666', // Dark gray for readability
+    fontWeight: '600',
+    color: '#000000',
+    marginBottom: 4,
+  },
+  cartItemPrice: {
+    fontSize: 14,
+    color: '#000000',
+    fontWeight: 'bold',
+  },
+  cartItemQuantity: {
+    fontSize: 14,
+    color: '#666666',
+    marginTop: 4,
+  },
+  removeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: '#F0F0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  removeButtonText: {
+    fontSize: 24,
+    color: '#FF0000',
+    fontWeight: 'bold',
+    lineHeight: 24,
+  },
+  totalContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#EEEEEE',
+    marginBottom: 16,
+  },
+  totalText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  totalAmount: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#000000',
+  },
+  checkoutButton: {
+    backgroundColor: '#000000',
+    padding: 16,
+    borderRadius: 8,
+    alignItems: 'center',
     marginBottom: 20,
+  },
+  checkoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
 });

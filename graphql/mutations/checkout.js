@@ -1,4 +1,4 @@
-import {gql} from '@apollo/client';
+import { gql } from '@apollo/client';
 
 export const CREATE_CHECKOUT = gql`
   mutation CreateCheckout($cartId: String!) {
@@ -17,9 +17,6 @@ export const CREATE_CHECKOUT = gql`
         status
         checkout_url
         origin_payment_id
-        total_amount
-        total_taxes_amount
-        total_cart_amount
         billing_address {
           id
           first_name
@@ -52,12 +49,10 @@ export const CREATE_CHECKOUT = gql`
           country_code
           zip
         }
-        total_shipping_amount
         available_payment_methods {
           name
         }
         discount_code
-        total_discount
         cart {
           cart_id
           customer_session_id
@@ -86,7 +81,6 @@ export const CREATE_CHECKOUT = gql`
             price {
               amount
               currency_code
-              tax
               discount
               compare_at
             }
@@ -100,9 +94,17 @@ export const CREATE_CHECKOUT = gql`
               }
             }
           }
-          total_amount
           currency
           available_shipping_countries
+        }
+        totals {
+          currency_code
+          subtotal
+          shipping
+          total
+          taxes
+          tax_rate
+          discounts
         }
       }
     }
@@ -148,9 +150,6 @@ export const UPDATE_CHECKOUT = gql`
         status
         checkout_url
         origin_payment_id
-        total_amount
-        total_taxes_amount
-        total_cart_amount
         billing_address {
           id
           first_name
@@ -183,12 +182,10 @@ export const UPDATE_CHECKOUT = gql`
           country_code
           zip
         }
-        total_shipping_amount
         available_payment_methods {
           name
         }
         discount_code
-        total_discount
         cart {
           cart_id
           customer_session_id
@@ -217,7 +214,6 @@ export const UPDATE_CHECKOUT = gql`
             price {
               amount
               currency_code
-              tax
               discount
               compare_at
             }
@@ -231,9 +227,17 @@ export const UPDATE_CHECKOUT = gql`
               }
             }
           }
-          total_amount
           currency
           available_shipping_countries
+        }
+        totals {
+          currency_code
+          subtotal
+          shipping
+          total
+          taxes
+          tax_rate
+          discounts
         }
       }
     }
