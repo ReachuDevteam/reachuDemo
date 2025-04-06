@@ -5,17 +5,17 @@
  * @format
  */
 
-import {ApolloProvider} from '@apollo/client';
+import { ApolloProvider } from '@apollo/client';
 import React from 'react';
-import {SafeAreaView, StyleSheet, useColorScheme} from 'react-native';
+import { SafeAreaView, StyleSheet, useColorScheme } from 'react-native';
 
-import {Colors} from 'react-native/Libraries/NewAppScreen';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 import client from './graphql/client';
-import {CartProvider} from './context/cartContext';
-import {InitializationMain} from './components/InitializationMain';
+import { CartProvider } from './context/cartContext';
+import { InitializationMain } from './components/InitializationMain';
 import AppHeader from './components/Header';
 import FooterNavigation from './components/FooterNavigation';
-import {ScreenContainer} from './components/Screens/Container';
+import { ScreenContainer } from './components/Screens/Container';
 
 function App(): React.JSX.Element {
   const isDarkMode = useColorScheme() === 'dark';
@@ -29,7 +29,7 @@ function App(): React.JSX.Element {
       <CartProvider>
         <InitializationMain>
           <SafeAreaView style={[styles.container, backgroundStyle]}>
-            <AppHeader title="Online Store" />
+            <AppHeader title="Reachu" />
             <ScreenContainer style={styles.screenContainerPadding} />
             <FooterNavigation />
           </SafeAreaView>

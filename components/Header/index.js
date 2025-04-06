@@ -1,14 +1,14 @@
-import React, {useState} from 'react';
-import {Header, Badge, Icon} from '@rneui/themed';
-import {StyleSheet, TouchableOpacity, View} from 'react-native';
-import {Image} from '@rneui/base/dist/Image/Image';
-import {SELECT_CURRENCY} from '../../consts/env';
-import {useCart} from '../../context/cartContext';
+import React, { useState } from 'react';
+import { Header, Badge, Icon } from '@rneui/themed';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Image } from '@rneui/base/dist/Image/Image';
+import { SELECT_CURRENCY } from '../../consts/env';
+import { useCart } from '../../context/cartContext';
 import CartSummaryModal from './CartSummaryModal';
 
-const AppHeader = ({title}) => {
+const AppHeader = ({ title }) => {
   const {
-    state: {cartItems},
+    state: { cartItems },
   } = useCart();
   const countSelectProducts = cartItems.length;
   const countryFlag = require('../../images/flags/no.png');
@@ -31,13 +31,13 @@ const AppHeader = ({title}) => {
               <Icon
                 name="shopping-cart"
                 type="font-awesome"
-                color="#fff"
+                color="#FFFFFF"
                 size={24}
               />
               <View style={styles.badgeContainer}>
                 <Badge
                   value={countSelectProducts}
-                  status="error"
+                  badgeStyle={styles.badgeStyle}
                   textStyle={styles.badgeTextStyle}
                 />
               </View>
@@ -52,13 +52,13 @@ const AppHeader = ({title}) => {
             <View>
               <Badge
                 value={SELECT_CURRENCY}
-                status="warning"
+                badgeStyle={styles.currencyBadgeStyle}
                 textStyle={styles.badgeCurrencyTextStyle}
               />
             </View>
           </View>
         }
-        backgroundColor="#007bff"
+        backgroundColor="#000000"
       />
       <CartSummaryModal
         isVisible={isCartSummaryVisible}
@@ -70,7 +70,7 @@ const AppHeader = ({title}) => {
 
 const styles = StyleSheet.create({
   centerComponentStyle: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -84,14 +84,20 @@ const styles = StyleSheet.create({
     top: -3,
     zIndex: 1,
   },
+  badgeStyle: {
+    backgroundColor: '#FFFFFF',
+  },
   badgeTextStyle: {
     fontSize: 10,
-    color: 'white',
+    color: '#000000',
+    fontWeight: 'bold',
   },
-
+  currencyBadgeStyle: {
+    backgroundColor: '#FFFFFF',
+  },
   badgeCurrencyTextStyle: {
     fontSize: 10,
-    color: 'white',
+    color: '#000000',
     fontWeight: 'bold',
   },
   flagStyle: {
