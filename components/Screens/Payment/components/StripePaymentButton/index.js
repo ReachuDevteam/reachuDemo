@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,18 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
+import {WebView} from 'react-native-webview';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useCart } from '../../../../../context/cartContext';
-import { useCheckoutInitPaymentStripe, useCreateCheckout } from '../../../../../graphql/hooks/checkout';
-import { FAKE_RETURN_URL } from '../../../../../consts/env';
+import {useCart} from '../../../../../context/cartContext';
+import {
+  useCheckoutInitPaymentStripe,
+  useGetCheckoutDetails,
+} from '../../../../../graphql/hooks/checkout';
+import {FAKE_RETURN_URL} from '../../../../../consts/env';
 
 export const StripePaymentButton = () => {
   const {
-    state: { checkout, cartId },
+    state: {checkout, cartId},
   } = useCart();
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [showWebView, setShowWebView] = useState(false);
@@ -27,8 +30,8 @@ export const StripePaymentButton = () => {
   const [email, setEmail] = useState(checkout?.email || '');
   const [showEmailInput, setShowEmailInput] = useState(false);
 
-  const { checkoutInitPaymentStripe } = useCheckoutInitPaymentStripe();
-  const { createCheckout } = useCreateCheckout();
+  const {checkoutInitPaymentStripe} = useCheckoutInitPaymentStripe();
+  const {getCheckoutDetails} = useGetCheckoutDetails();
 
   const handleEmailSubmit = () => {
     if (email && email.includes('@')) {
@@ -63,9 +66,12 @@ export const StripePaymentButton = () => {
 
       // First create the checkout
       console.log('[Stripe Payment] Creating checkout with cartId:', cartId);
-      const checkoutData = await createCheckout(cartId);
+      const checkoutData = await getCheckoutDetails(checkout.id);
       console.log('[Stripe Payment] Checkout created, ID:', checkoutData?.id);
-      console.log('[Stripe Payment] Full checkout data:', JSON.stringify(checkoutData, null, 2));
+      console.log(
+        '[Stripe Payment] Full checkout data:',
+        JSON.stringify(checkoutData, null, 2),
+      );
 
       if (!checkoutData) {
         const errorMsg = 'Could not create checkout - no data returned';
@@ -91,10 +97,13 @@ export const StripePaymentButton = () => {
       }
 
       // Check for available payment methods
-      if (checkoutData.available_payment_methods &&
-        checkoutData.available_payment_methods.length > 0) {
-        console.log('[Stripe Payment] Available payment methods:',
-          checkoutData.available_payment_methods.map(m => m.name).join(', ')
+      if (
+        checkoutData.available_payment_methods &&
+        checkoutData.available_payment_methods.length > 0
+      ) {
+        console.log(
+          '[Stripe Payment] Available payment methods:',
+          checkoutData.available_payment_methods.map(m => m.name).join(', '),
         );
       } else {
         console.warn('[Stripe Payment] No available payment methods returned');
@@ -118,28 +127,46 @@ export const StripePaymentButton = () => {
         checkoutData.id,
       );
 
-      console.log('[Stripe Payment] Payment initialization result:', JSON.stringify(result, null, 2));
+      console.log(
+        '[Stripe Payment] Payment initialization result:',
+        JSON.stringify(result, null, 2),
+      );
 
       if (result?.order_id) {
-        console.log('[Stripe Payment] Successfully received order ID and URL:', {
-          orderId: result.order_id,
-          checkoutUrl: result.checkout_url,
-        });
+        console.log(
+          '[Stripe Payment] Successfully received order ID and URL:',
+          {
+            orderId: result.order_id,
+            checkoutUrl: result.checkout_url,
+          },
+        );
         setOrderId(result.order_id);
         setUrl(result.checkout_url);
         setShowWebView(true);
       } else {
-        console.error('[Stripe Payment] Missing order_id or checkout_url in response');
-        Alert.alert('Error', 'Payment initialization failed - missing order information');
+        console.error(
+          '[Stripe Payment] Missing order_id or checkout_url in response',
+        );
+        Alert.alert(
+          'Error',
+          'Payment initialization failed - missing order information',
+        );
       }
     } catch (error) {
       console.error('[Stripe Payment] Payment initiation error:', error);
-      console.error('[Stripe Payment] Error details:', JSON.stringify({
-        name: error.name,
-        message: error.message,
-        networkError: error.networkError,
-        graphQLErrors: error.graphQLErrors,
-      }, null, 2));
+      console.error(
+        '[Stripe Payment] Error details:',
+        JSON.stringify(
+          {
+            name: error.name,
+            message: error.message,
+            networkError: error.networkError,
+            graphQLErrors: error.graphQLErrors,
+          },
+          null,
+          2,
+        ),
+      );
       Alert.alert('Error', 'Could not initiate payment. Please try again.');
     } finally {
       setLoading(false);
@@ -175,7 +202,9 @@ export const StripePaymentButton = () => {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <TouchableOpacity style={styles.payButton} onPress={handleEmailSubmit}>
+          <TouchableOpacity
+            style={styles.payButton}
+            onPress={handleEmailSubmit}>
             <Text style={styles.payButtonText}>Continue to Payment</Text>
           </TouchableOpacity>
         </View>
@@ -191,18 +220,21 @@ export const StripePaymentButton = () => {
             setShowWebView(false);
           }}>
           <WebView
-            source={{ uri: url }}
+            source={{uri: url}}
             onLoad={() => {
               console.log('[Stripe Payment] WebView loaded URL:', url);
               setLoading(false);
             }}
             onNavigationStateChange={handleWebViewNavigationChange}
-            onError={(syntheticEvent) => {
-              const { nativeEvent } = syntheticEvent;
-              console.error('[Stripe Payment] WebView error:', JSON.stringify(nativeEvent, null, 2));
+            onError={syntheticEvent => {
+              const {nativeEvent} = syntheticEvent;
+              console.error(
+                '[Stripe Payment] WebView error:',
+                JSON.stringify(nativeEvent, null, 2),
+              );
             }}
             // eslint-disable-next-line react-native/no-inline-styles
-            style={{ marginTop: 20 }}
+            style={{marginTop: 20}}
           />
           {loading && (
             <View style={styles.loadingOverlay}>

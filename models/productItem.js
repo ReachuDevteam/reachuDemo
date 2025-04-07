@@ -9,6 +9,7 @@ export class CartItem {
     tax,
     cartItemId,
     productShipping,
+    available_shippings,
   }) {
     this.title = title;
     this.image = image;
@@ -19,5 +20,6 @@ export class CartItem {
     this.tax = tax;
     this.cartItemId = cartItemId;
     this.productShipping = productShipping;
+    this.available_shippings = available_shippings ?? [];
   }
 }

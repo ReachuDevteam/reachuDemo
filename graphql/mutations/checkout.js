@@ -1,4 +1,4 @@
-import { gql } from '@apollo/client';
+import {gql} from '@apollo/client';
 
 export const CREATE_CHECKOUT = gql`
   mutation CreateCheckout($cartId: String!) {
@@ -114,28 +114,20 @@ export const CREATE_CHECKOUT = gql`
 export const UPDATE_CHECKOUT = gql`
   mutation UpdateCheckout(
     $checkoutId: String!
-    $buyerAcceptsTermsConditions: Boolean
-    $buyerAcceptsPurchaseConditions: Boolean
+    $email: String
     $billingAddress: AddressArgs
     $shippingAddress: AddressArgs
-    $paymentMethod: String
-    $cancelUrl: String
-    $successUrl: String
-    $email: String
-    $status: String
+    $buyerAcceptsPurchaseConditions: Boolean
+    $buyerAcceptsTermsConditions: Boolean
   ) {
     Checkout {
       UpdateCheckout(
         checkout_id: $checkoutId
-        buyer_accepts_terms_conditions: $buyerAcceptsTermsConditions
-        buyer_accepts_purchase_conditions: $buyerAcceptsPurchaseConditions
+        email: $email
         billing_address: $billingAddress
         shipping_address: $shippingAddress
-        payment_method: $paymentMethod
-        cancel_url: $cancelUrl
-        success_url: $successUrl
-        email: $email
-        status: $status
+        buyer_accepts_purchase_conditions: $buyerAcceptsPurchaseConditions
+        buyer_accepts_terms_conditions: $buyerAcceptsTermsConditions
       ) {
         buyer_accepts_purchase_conditions
         buyer_accepts_terms_conditions
@@ -216,6 +208,10 @@ export const UPDATE_CHECKOUT = gql`
               currency_code
               discount
               compare_at
+              compare_at_incl_taxes
+              amount_incl_taxes
+              tax_amount
+              tax_rate
             }
             shipping {
               id
@@ -224,9 +220,27 @@ export const UPDATE_CHECKOUT = gql`
               price {
                 amount
                 currency_code
+                amount_incl_taxes
+                tax_amount
+                tax_rate
+              }
+            }
+            available_shippings {
+              id
+              name
+              description
+              country_code
+              price {
+                amount
+                currency_code
+                amount_incl_taxes
+                tax_amount
+                tax_rate
               }
             }
           }
+          subtotal
+          shipping
           currency
           available_shipping_countries
         }

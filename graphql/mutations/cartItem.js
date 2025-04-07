@@ -94,9 +94,12 @@ export const UPDATE_ITEM_TO_CART = gql`
           price {
             amount
             currency_code
-            tax
             discount
             compare_at
+            compare_at_incl_taxes
+            amount_incl_taxes
+            tax_amount
+            tax_rate
           }
           shipping {
             id
@@ -105,10 +108,27 @@ export const UPDATE_ITEM_TO_CART = gql`
             price {
               amount
               currency_code
+              amount_incl_taxes
+              tax_amount
+              tax_rate
+            }
+          }
+          available_shippings {
+            id
+            name
+            description
+            country_code
+            price {
+              amount
+              currency_code
+              amount_incl_taxes
+              tax_amount
+              tax_rate
             }
           }
         }
-        total_amount
+        subtotal
+        shipping
         currency
         available_shipping_countries
       }

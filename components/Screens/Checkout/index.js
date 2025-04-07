@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -10,26 +10,26 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import { Button } from '@rneui/themed';
+import {Button} from '@rneui/themed';
 import CheckBox from '@react-native-community/checkbox';
-import { actions, useCart } from '../../../context/cartContext';
-import { useUpdateCart } from '../../../graphql/hooks/cart';
+import {actions, useCart} from '../../../context/cartContext';
+import {useUpdateCart} from '../../../graphql/hooks/cart';
 import {
   useCreateCheckout,
   useUpdateCheckout,
 } from '../../../graphql/hooks/checkout';
-import { useUpdateItemToCart } from '../../../graphql/hooks/cartItem';
-import { CartSummary } from './components/CartSummary';
-import { ShippingAddressForm } from './components/ShippingAddressForm';
-import { BillingAddressForm } from './components/BillingAddressForm';
-import { CheckoutReview } from './components/CheckoutReview';
-import { StepIndicator } from './components/StepIndicator';
+import {useUpdateItemToCart} from '../../../graphql/hooks/cartItem';
+import {CartSummary} from './components/CartSummary';
+import {ShippingAddressForm} from './components/ShippingAddressForm';
+import {BillingAddressForm} from './components/BillingAddressForm';
+import {CheckoutReview} from './components/CheckoutReview';
+import {StepIndicator} from './components/StepIndicator';
 
-const CartItem = ({ item, onRemove }) => {
+const CartItem = ({item, onRemove}) => {
   return (
     <View style={styles.cartItem}>
       {item.image && (
-        <Image source={{ uri: item.image }} style={styles.cartItemImage} />
+        <Image source={{uri: item.image}} style={styles.cartItemImage} />
       )}
       <View style={styles.cartItemDetails}>
         <Text style={styles.cartItemTitle} numberOfLines={1}>
@@ -49,22 +49,22 @@ const CartItem = ({ item, onRemove }) => {
 
 export const CheckoutScreen = () => {
   const {
-    state: { cartItems },
+    state: {cartItems},
   } = useCart();
 
   const [currentStep, setCurrentStep] = useState(0);
   const [shippingAddress, setShippingAddress] = useState(null);
   const [billingAddress, setBillingAddress] = useState(null);
   const [sameAsBillingAddress, setSameAsBillingAddress] = useState(true);
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState('devmiguelopz@gmail.com');
 
   // Steps for the checkout process
   const steps = [
-    { title: 'Cart', completed: true },
-    { title: 'Shipping', completed: currentStep > 0 },
-    { title: 'Billing', completed: currentStep > 1 },
-    { title: 'Review', completed: currentStep > 2 },
-    { title: 'Payment', completed: false }
+    {title: 'Cart', completed: true},
+    {title: 'Shipping', completed: currentStep > 0},
+    {title: 'Billing', completed: currentStep > 1},
+    {title: 'Review', completed: currentStep > 2},
+    {title: 'Payment', completed: false},
   ];
 
   const handleNext = () => {
@@ -75,7 +75,7 @@ export const CheckoutScreen = () => {
     setCurrentStep(currentStep - 1);
   };
 
-  const handleShippingSubmit = (data) => {
+  const handleShippingSubmit = data => {
     setShippingAddress(data);
     setEmail(data.email);
 
@@ -87,7 +87,7 @@ export const CheckoutScreen = () => {
     }
   };
 
-  const handleBillingSubmit = (data) => {
+  const handleBillingSubmit = data => {
     setBillingAddress(data);
     setCurrentStep(3); // Go to review step (previous was 2)
   };
@@ -184,7 +184,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderRadius: 8,
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 2,

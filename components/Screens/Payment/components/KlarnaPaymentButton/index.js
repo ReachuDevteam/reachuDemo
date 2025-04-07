@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -9,15 +9,18 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
-import { WebView } from 'react-native-webview';
+import {WebView} from 'react-native-webview';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useCheckoutInitPaymentKlarna, useCreateCheckout } from '../../../../../graphql/hooks/checkout';
-import { FAKE_RETURN_URL, REACHU_SERVER_URL } from '../../../../../consts/env';
-import { useCart } from '../../../../../context/cartContext';
+import {
+  useCheckoutInitPaymentKlarna,
+  useGetCheckoutDetails,
+} from '../../../../../graphql/hooks/checkout';
+import {FAKE_RETURN_URL, REACHU_SERVER_URL} from '../../../../../consts/env';
+import {useCart} from '../../../../../context/cartContext';
 
 export const KlarnaPaymentButton = () => {
   const {
-    state: { checkout, selectedCountry, cartId },
+    state: {checkout, selectedCountry, cartId},
   } = useCart();
   const [paymentSuccess, setPaymentSuccess] = useState(false);
   const [showWebView, setShowWebView] = useState(false);
@@ -27,8 +30,8 @@ export const KlarnaPaymentButton = () => {
   const [email, setEmail] = useState(checkout?.email || '');
   const [showEmailInput, setShowEmailInput] = useState(false);
 
-  const { checkoutInitPaymentKlarna } = useCheckoutInitPaymentKlarna();
-  const { createCheckout } = useCreateCheckout();
+  const {checkoutInitPaymentKlarna} = useCheckoutInitPaymentKlarna();
+  const {getCheckoutDetails} = useGetCheckoutDetails();
 
   const handleEmailSubmit = () => {
     if (email && email.includes('@')) {
@@ -64,9 +67,12 @@ export const KlarnaPaymentButton = () => {
 
       // First create the checkout
       console.log('[Klarna Payment] Creating checkout with cartId:', cartId);
-      const checkoutData = await createCheckout(cartId);
+      const checkoutData = await getCheckoutDetails(checkout.id);
       console.log('[Klarna Payment] Checkout created, ID:', checkoutData?.id);
-      console.log('[Klarna Payment] Full checkout data:', JSON.stringify(checkoutData, null, 2));
+      console.log(
+        '[Klarna Payment] Full checkout data:',
+        JSON.stringify(checkoutData, null, 2),
+      );
 
       if (!checkoutData) {
         const errorMsg = 'Could not create checkout - no data returned';
@@ -92,15 +98,18 @@ export const KlarnaPaymentButton = () => {
       }
 
       // Check for available payment methods
-      if (checkoutData.available_payment_methods &&
-        checkoutData.available_payment_methods.length > 0) {
-        console.log('[Klarna Payment] Available payment methods:',
-          checkoutData.available_payment_methods.map(m => m.name).join(', ')
+      if (
+        checkoutData.available_payment_methods &&
+        checkoutData.available_payment_methods.length > 0
+      ) {
+        console.log(
+          '[Klarna Payment] Available payment methods:',
+          checkoutData.available_payment_methods.map(m => m.name).join(', '),
         );
 
         // Check if Klarna is available
         const klarnaAvailable = checkoutData.available_payment_methods.some(
-          method => method.name === 'Klarna'
+          method => method.name === 'Klarna',
         );
         if (!klarnaAvailable) {
           console.warn('[Klarna Payment] Klarna payment method not available!');
@@ -129,10 +138,16 @@ export const KlarnaPaymentButton = () => {
         email,
       );
 
-      console.log('[Klarna Payment] Payment initialization result:', JSON.stringify(result, null, 2));
+      console.log(
+        '[Klarna Payment] Payment initialization result:',
+        JSON.stringify(result, null, 2),
+      );
 
       if (result?.order_id) {
-        console.log('[Klarna Payment] Successfully received order ID:', result.order_id);
+        console.log(
+          '[Klarna Payment] Successfully received order ID:',
+          result.order_id,
+        );
 
         const klarnaUrl = `${REACHU_SERVER_URL}/api/checkout/${checkoutData.id}/payment-klarna-html-body`;
         console.log('[Klarna Payment] Setting WebView URL:', klarnaUrl);
@@ -142,16 +157,26 @@ export const KlarnaPaymentButton = () => {
         setShowWebView(true);
       } else {
         console.error('[Klarna Payment] Missing order_id in response');
-        Alert.alert('Error', 'Payment initialization failed - missing order information');
+        Alert.alert(
+          'Error',
+          'Payment initialization failed - missing order information',
+        );
       }
     } catch (error) {
       console.error('[Klarna Payment] Payment initiation error:', error);
-      console.error('[Klarna Payment] Error details:', JSON.stringify({
-        name: error.name,
-        message: error.message,
-        networkError: error.networkError,
-        graphQLErrors: error.graphQLErrors,
-      }, null, 2));
+      console.error(
+        '[Klarna Payment] Error details:',
+        JSON.stringify(
+          {
+            name: error.name,
+            message: error.message,
+            networkError: error.networkError,
+            graphQLErrors: error.graphQLErrors,
+          },
+          null,
+          2,
+        ),
+      );
       Alert.alert('Error', 'Could not initiate payment. Please try again.');
     } finally {
       setLoading(false);
@@ -188,7 +213,9 @@ export const KlarnaPaymentButton = () => {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <TouchableOpacity style={styles.payButton} onPress={handleEmailSubmit}>
+          <TouchableOpacity
+            style={styles.payButton}
+            onPress={handleEmailSubmit}>
             <Text style={styles.payButtonText}>Continue to Payment</Text>
           </TouchableOpacity>
         </View>
@@ -204,17 +231,20 @@ export const KlarnaPaymentButton = () => {
             setShowWebView(false);
           }}>
           <WebView
-            source={{ uri: url }}
+            source={{uri: url}}
             onLoad={() => {
               console.log('[Klarna Payment] WebView loaded URL:', url);
               setLoading(false);
             }}
             onNavigationStateChange={handleWebViewNavigationChange}
-            onError={(syntheticEvent) => {
-              const { nativeEvent } = syntheticEvent;
-              console.error('[Klarna Payment] WebView error:', JSON.stringify(nativeEvent, null, 2));
+            onError={syntheticEvent => {
+              const {nativeEvent} = syntheticEvent;
+              console.error(
+                '[Klarna Payment] WebView error:',
+                JSON.stringify(nativeEvent, null, 2),
+              );
             }}
-            style={{ marginTop: 20 }}
+            style={{marginTop: 20}}
           />
           {loading && (
             <View style={styles.loadingOverlay}>

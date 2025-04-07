@@ -80,6 +80,7 @@ const ProductItem = ({product}) => {
         );
         if (matchingLineItem?.id) {
           cartItem.cartItemId = matchingLineItem.id;
+          cartItem.available_shippings = matchingLineItem.available_shippings;
           dispatch({type: actions.ADD_CART_ITEM, payload: cartItem});
         }
       } else {
